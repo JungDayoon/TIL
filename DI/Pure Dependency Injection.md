@@ -12,6 +12,8 @@
 
 
 
+
+
 ## Context Isolation
 
 **기존 코드**
@@ -108,5 +110,102 @@ class ActivityCompositionRoot(
 
 
 
+
+
 ## Objects vs Data Structures
+
+- Objects expose behavior
+
+- Data Structures expose data
+
+Data structures which should expose well structured data, shouldn't know anything about objects
+
+Dependency Injection Architectural Pattern deals with objects, not data structures
+
+-> You should not expose data structures on your object graph either internally or externally. Composition rules only provide objects.
+
+
+
+
+
+## Injecting Services "from Outside"
+
+> QuestionsListFragment
+
+```kotlin
+class QuestionsListFragment : BaseFragment(), QuestionsListViewMvc.Listener {
+
+    private var isDataLoaded = false
+    private lateinit var viewMvc: QuestionsListViewMvc
+    private lateinit var fetchQuestionsUseCase: FetchQuestionsUseCase
+    private lateinit var dialogsNavigator: DialogsNavigator
+    private lateinit var screensNavigator: ScreensNavigator
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        fetchQuestionsUseCase = compositionRoot.fetchQuestionsUseCase
+        dialogsNavigator = compositionRoot.dialogsNavigator
+        screensNavigator = compositionRoot.screensNavigator
+    }
+}
+```
+
+onCreate 에서 compositionRoot를 통해 각자의 dependency를 주입받고 있는 상황
+
+-> 바깥에서 주입받도록 수정
+
+
+
+> Injector
+
+```kotlin
+class Injector(private val compositionRoot: PresentationCompositionRoot) {
+
+    fun inject(fragment: QuestionsListFragment) {
+        fragment.dialogsNavigator = compositionRoot.dialogsNavigator
+        fragment.fetchQuestionsUseCase = compositionRoot.fetchQuestionsUseCase
+        fragment.screensNavigator = compositionRoot.screensNavigator
+        fragment.viewMvcFactory = compositionRoot.viewMvcFactory
+    }
+
+    fun inject(activity: QuestionDetailsActivity) {
+        activity.screensNavigator = compositionRoot.screensNavigator
+        activity.dialogsNavigator = compositionRoot.dialogsNavigator
+        activity.fetchQuestionDetailsUseCase = compositionRoot.fetchQuestionDetailsUseCase
+        activity.viewMvcFactory = compositionRoot.viewMvcFactory
+    }
+}
+```
+
+> QuestionsListFragment
+
+```kotlin
+class QuestionsListFragment : BaseFragment(), QuestionsListViewMvc.Listener {
+
+    lateinit var fetchQuestionsUseCase: FetchQuestionsUseCase
+    lateinit var dialogsNavigator: DialogsNavigator
+    lateinit var screensNavigator: ScreensNavigator
+    lateinit var viewMvcFactory: ViewMvcFactory
+
+    private lateinit var viewMvc: QuestionsListViewMvc
+
+    private var isDataLoaded = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        injector.inject(this)
+        super.onCreate(savedInstanceState)
+    }
+}
+```
+
+
+
+
+
+## Dependency Injection Frameworks
+
+- External library
+- Provides specific template for Construction Set implementation
+- Provides set of pre-defined conventions
 
