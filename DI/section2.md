@@ -3,6 +3,7 @@
 ## Comparison Between Fundamental Dependency Injection Techniques
 
 **Constructor injection**
+
 장점
 
 - simple
@@ -15,17 +16,21 @@
 
 
 **Method injection**
+
 장점
 
 - method signature reflects dependencies
 - can happen after construction
+
 단점
+
 - not as explicit as constructor injection
 - can lead to implicit ordering requirements(temporal coupling)
 
 
 
 **Field injection(property in Kotlin)**
+
 장점
 
 - can happen after construction
