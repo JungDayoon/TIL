@@ -152,13 +152,13 @@ what is DaggerPresentationComponent?
 
 *Refactoring 전
 
-![image-20210602011934363](/Users/user/Library/Application Support/typora-user-images/image-20210602011934363.png)
+![image-20210602011934363](https://user-images.githubusercontent.com/45536712/120359038-333fa900-c342-11eb-93ff-a343a46a755c.png)
 
 
 
 *Refactoring 후
 
-![스크린샷 2021-06-02 오전 1.20.27](/Users/user/Library/Application Support/typora-user-images/스크린샷 2021-06-02 오전 1.20.27.png)
+![스크린샷 2021-06-02 오전 1.20.27](https://user-images.githubusercontent.com/45536712/120359516-b82ac280-c342-11eb-9b89-213f329da324.png)
 
 
 
