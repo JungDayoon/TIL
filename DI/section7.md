@@ -229,7 +229,7 @@ annotation class AppScope {
 
 *Refactoring 후
 
-![_2021-05-31__12.55.14](/Users/user/Downloads/_2021-05-31__12.55.14.png)
+![_2021-05-31__12.55.14](https://user-images.githubusercontent.com/45536712/120433777-9b2fd700-c3b6-11eb-925c-3783032ca0d5.png)
 
 
 
@@ -283,7 +283,7 @@ class QuestionDetailsActivity : BaseActivity(), QuestionDetailsViewMvc.Listener 
 }
 ```
 
-![_2021-05-31__1.09.23](/Users/user/Downloads/_2021-05-31__1.09.23.png)
+![_2021-05-31__1.09.23](https://user-images.githubusercontent.com/45536712/120433758-979c5000-c3b6-11eb-8c57-b516eb8ded46.png)
 
 
 
