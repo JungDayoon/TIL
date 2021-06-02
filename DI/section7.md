@@ -164,8 +164,142 @@ what is DaggerPresentationComponent?
 
 ### Dagger Convention (1)
 
-1. Components are interfaces annotated with @Component
-2. Modules are classes annotated with @Module
-3. Methods in modules that provides services are annotated with @Provides
-4. Provided services can be used as method arguments in other provider methods
+- Components are interfaces annotated with @Component
+
+- Modules are classes annotated with @Module
+
+- Methods in modules that provides services are annotated with @Provides
+
+- Provided services can be used as method arguments in other provider methods
+
+
+
+## Scopes
+
+```kotlin
+@Singleton
+@Provides
+fun stackoverflowApi() = retrofit.create(StackoverflowApi::clss.java)
+```
+
+-> Dagger가 stackoverflowApi에 처음 접근할 때 해당 instance를 cache 해두었다가 다음에 여러번 접근하더라도 동일한 instance를 return 하게 됨
+
+
+
+case 1) AppModule에서 제공하는 객체들을 singleton으로 만들기
+
+```kotlin
+@Singleton
+@Provides
+fun retrofit(): Retrofit =
+  Retrofit.Builder()
+    .baseUrl(Constants.BASE_URL)
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+
+@Singleton
+@Provides
+fun stackoverflowApi(): StackoverflowApi = retrofit().create(StackoverflowApi::class.java)
+// stackoverflowApi에서 retrofit()함수를 직접적으로 호출하면, stackoverflowApi에 접근할 때 마다 retrofit 객체가 새로 생겨나게 됨. 
+// 지금은 다행히 stackoverflowApi도 singleton이므로 문제가 생기지 않지만 다른 scope에서 생성된다면 stackoverflowApi 객체가 새로 생성될 때마다 retrofit 객체도 새로 생성되게 됨 -> bug
+
+// 수정 -> retrofit 객체를 method 인자로 넘겨주기!
+@Singleton
+@Provides
+fun stackoverflowApi(retrofit: Retrofit): StackoverflowApi = retrofit.create(StackoverflowApi::class.java)
+```
+
+
+
+case 2) Singleton annotation을 AppScope annotation으로 바꾸기
+
+Application이 살아있는 동안 유지되는 scope이므로 singleton과 의미는 동일
+
+```kotlin
+@Scope
+annotation class AppScope {
+}
+
+// -> @Singleton을 @AppScope로 대체
+
+```
+
+
+
+*Refactoring 후
+
+![_2021-05-31__12.55.14](/Users/user/Downloads/_2021-05-31__12.55.14.png)
+
+
+
+### Dagger Conventions (2)
+
+- Scopes are annotations, annotated with @Scope
+
+- Components that provide scoped services must be scoped
+
+- All clients get the same instance of a scoped service from the same instance of a Component
+
+
+
+## Component as Injector
+
+PresentationComponent를 injector로 사용하기
+
+```kotlin
+@Component(modules = [PresentationModule::class])
+interface PresentationComponent {
+
+    fun inject(fragment: QuestionsListFragment) 
+  // interface지만 구현할 필요 없음. Dagger가 알아서 해줌
+  // Dagger에서 component는 기본적으로 injector임 (Module은 compositionRoot)
+
+    fun inject(activity: QuestionDetailsActivity)
+
+}
+```
+
+
+
+QuestionsListFragment, QuestionDetailsActivity에서 주입 받는 property들에 @Inject annotation 추가(must not be private - Dagger's convention)
+
+```kotlin
+class QuestionDetailsActivity : BaseActivity(), QuestionDetailsViewMvc.Listener {
+
+    @Inject lateinit var fetchQuestionDetailsUseCase: FetchQuestionDetailsUseCase
+    @Inject lateinit var dialogsNavigator: DialogsNavigator
+    @Inject lateinit var screensNavigator: ScreensNavigator
+    @Inject lateinit var viewMvcFactory: ViewMvcFactory
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        injector.inject(this) // presentationComponent의 inject 함수
+        super.onCreate(savedInstanceState)
+        viewMvc = viewMvcFactory.newQuestionDetailsViewMvc(null)
+        setContentView(viewMvc.rootView)
+
+        questionId = intent.extras!!.getString(EXTRA_QUESTION_ID)!!
+    }
+}
+```
+
+![_2021-05-31__1.09.23](/Users/user/Downloads/_2021-05-31__1.09.23.png)
+
+
+
+### Dagger Conventions (3)
+
+- Void methods with single argument defined on components generate injectors for the type of the argument
+- Client's non-private non-final properties annotated with @Inject designate injection targets
+
+
+
+## Dependent Components
+
+### Dagger Conventions (4)
+
+- Component inter-dependencies are specified as part of @Component annotation
+- Component B that depends on Component A has implicit access to all services exposed by Component A
+  - Services from A can be injected by B
+  - Services from A can be consumed inside modules of B
 
