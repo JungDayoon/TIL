@@ -20,9 +20,9 @@ dependencies {
 
 ## Components and Modules
 
-기존에 CompositionRoot를 Dagger module로 변경 (@module annotation 추가)
+기존에 CompositionRoot를 Dagger module로 변경 (`@module` annotation 추가)
 
-CompositionRoot에서 제공하던 property들을 Dagger provides로 변경(@Provides annotation은 property type에서 사용할 수 없기 때문에 해당 property를 function으로 수정)
+CompositionRoot에서 제공하던 property들을 Dagger provides로 변경(`@Provides` annotation은 property type에서 사용할 수 없기 때문에 해당 property를 function으로 수정)
 
 <PresentationCompositionRoot 수정 -> PresentationModule>
 
@@ -164,11 +164,11 @@ what is DaggerPresentationComponent?
 
 ### Dagger Convention (1)
 
-- Components are interfaces annotated with @Component
+- Components are interfaces annotated with `@Component`
 
-- Modules are classes annotated with @Module
+- Modules are classes annotated with `@Module`
 
-- Methods in modules that provides services are annotated with @Provides
+- Methods in modules that provides services are annotated with `@Provides`
 
 - Provided services can be used as method arguments in other provider methods
 
@@ -235,7 +235,7 @@ annotation class AppScope {
 
 ### Dagger Conventions (2)
 
-- Scopes are annotations, annotated with @Scope
+- Scopes are annotations, annotated with `@Scope`
 
 - Components that provide scoped services must be scoped
 
@@ -262,7 +262,7 @@ interface PresentationComponent {
 
 
 
-QuestionsListFragment, QuestionDetailsActivity에서 주입 받는 property들에 @Inject annotation 추가(must not be private - Dagger's convention)
+QuestionsListFragment, QuestionDetailsActivity에서 주입 받는 property들에 `@Inject` annotation 추가(must not be private - Dagger's convention)
 
 ```kotlin
 class QuestionDetailsActivity : BaseActivity(), QuestionDetailsViewMvc.Listener {
@@ -290,7 +290,7 @@ class QuestionDetailsActivity : BaseActivity(), QuestionDetailsViewMvc.Listener 
 ### Dagger Conventions (3)
 
 - Void methods with single argument defined on components generate injectors for the type of the argument
-- Client's non-private non-final properties annotated with @Inject designate injection targets
+- Client's non-private non-final properties annotated with `@Inject` designate injection targets
 
 
 
@@ -298,8 +298,136 @@ class QuestionDetailsActivity : BaseActivity(), QuestionDetailsViewMvc.Listener 
 
 ### Dagger Conventions (4)
 
-- Component inter-dependencies are specified as part of @Component annotation
+- Component inter-dependencies are specified as part of `@Component` annotation
 - Component B that depends on Component A has implicit access to all services exposed by Component A
   - Services from A can be injected by B
   - Services from A can be consumed inside modules of B
+
+
+
+## Subcomponents
+
+```kotlin
+@ActivityScope
+@Component(dependencies = [AppComponent::class], modules = [ActivityModule::class])
+interface ActivityComponent {
+
+    fun activity(): AppCompatActivity
+
+    fun layoutInflater(): LayoutInflater
+
+    fun fragmentManager(): FragmentManager
+
+    fun stackoverflowApi(): StackoverflowApi
+
+    fun screensNavigator(): ScreensNavigator
+
+}
+
+```
+
+위의 코드 처럼 explicit declaration을 없앨 수 있는 방법은 없을까? -> Dagger will do!
+
+Dagger는 stackoverflowApi가 AppModule로 부터 제공 받는다는 것을 알고 있음. 또한 stackoverflowApi가 어디서 사용되는 지도 알고 있음(in PresentationModule)
+
+-> PresentationComponent를 Subcomponent로 만들자
+
+<PresentationComponent>
+
+```kotlin
+// 수정 전
+@PresentationScope
+@Component(dependencies = [ActivityModule::class], modules = [PresentationModule::class])
+interface PresentationComponent {
+    fun inject(fragment: QuestionsListFragment)
+    fun inject(activity: QuestionDetailsActivity)
+}
+
+// 수정 후
+@PresentationScope
+@Subcomponent(modules = [PresentationModule::class])
+interface PresentationComponent {
+    fun inject(fragment: QuestionsListFragment)
+    fun inject(activity: QuestionDetailsActivity)
+}
+
+```
+
+<ActivityComponent>
+
+```kotlin
+// 수정 전 코드는 위에 있음
+// 수정 후 
+@ActivityScope
+@Component(dependencies = [AppComponent::class], modules = [ActivityModule::class])
+interface ActivityComponent {
+    fun newPresentationComponent(presentationModule: PresentationModule): PresentationComponent
+
+}
+```
+
+<BaseActivity>
+
+```kotlin
+// 수정 전
+private val presentationComponent by lazy {
+  	DaggerPresentationComponent.builder()
+      .activityComponent(activityComponent)
+      .presentationModule(PresentationModule())
+      .build()
+}
+
+// 수정 후
+private val presentationComponent by lazy {
+  	activityComponent.newPresentationComponent(PresentationModule())
+}
+```
+
+
+
+### Dagger Conventions (5)
+
+- Subcomponents specifed by `@Subcomponent` annotation
+- Parent Component exposes factory method which returns Subcomponent
+- The argument of the factory method are Subcomponent's modules
+- Subcomponents get access to all services provided by parent (provided, not just exposed)
+
+
+
+## Multi-Module Components
+
+여러 module에 의존하는 single component를 만들 수 있음
+
+언제? -> if modules don't have any bootstrapping. 즉, module에 생성자가 없는 경우
+
+```kotlin
+@PresentationScope
+// 하나의 component가 두개의 module에 의존
+@Subcomponent(modules = [PresentationModule::class, UseCasesModule::class])
+interface PresentationComponent {
+    fun inject(fragment: QuestionsListFragment)
+    fun inject(activity: QuestionDetailsActivity)
+}
+
+```
+
+```kotlin
+// in BaseActivity, newPresentationComponent의 생성자로 모듈을 넘겨주지 않아도 됨 - 두 모듈 모두 생성자가 없기 때문
+// 만약 생성자가 있는 경우에는 명시해주어야함. 대거가 해당 생성자를 어디서 가져와야 하는지 모르기 때문)
+private val presentationComponent by lazy {
+    activityComponent.newPresentationComponent()
+}
+```
+
+주의점: 해당 Dagger convention 사용 시 어떤 모듈에 의존하는지 component definition을 봐야지만 확인 가능. code maintainence에 더 많은 effort가 들 수도 있음
+
+
+
+### Dagger Conventions (6)
+
+- Components can use more than one module
+- Modules of a single Component share the same object graph
+- Dagger automatically instantiates modules with no-argument constructors
+
+
 
