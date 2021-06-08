@@ -431,3 +431,45 @@ private val presentationComponent by lazy {
 
 
 
+## Automatic Discovery of Services
+
+<PresentationModule>
+
+```
+@Provides
+fun dialogsNavigator(fragmentManager: FragmentManager) = DialogsNavigator(fragmentManager)
+```
+
+이렇게 말고, Dagger가 알아서 DialogsNavigator의 모든 정보가 준비되면 그때 주입해줄 수는 없을까?
+
+```kotlin
+// 수정 전
+class DialogsNavigator(private val fragmentManager: FragmentManager) {
+
+    fun showServerErrorDialog() {
+        fragmentManager.beginTransaction()
+                .add(ServerErrorDialogFragment.newInstance(), null)
+                .commitAllowingStateLoss()
+    }
+}
+// 수정 후
+class DialogsNavigator @Inject constructor(private val fragmentManager: FragmentManager) {
+
+    fun showServerErrorDialog() {
+        fragmentManager.beginTransaction()
+                .add(ServerErrorDialogFragment.newInstance(), null)
+                .commitAllowingStateLoss()
+    }
+}
+```
+
+클래스 명 뒤에 `@Inject` annotation이 있으면 Dagger는 해당 클래스의 생성자를 어디서 provide 받을 수 있는지에 대한 정보가 있는지 찾는다. 즉, fragmentManager를 어디서 provide하는지 찾는다.
+
+fragmentManager를 ActivityModule에서 공급해주고 있기 때문에 Dagger는 fragmentManager를 어떻게 provide할지 알고있다. -> 따라서 DialogsNavigator를 construct 할 수 있게 된다.
+
+
+
+### Dagger Conventions (7)
+
+- Dagger can automatically discover services having a public constructor annotated with `@inject` annotation
+- Automatically discovered services can be scoped
