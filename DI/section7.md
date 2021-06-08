@@ -469,7 +469,18 @@ fragmentManager를 ActivityModule에서 공급해주고 있기 때문에 Dagger�
 
 
 
+*주의점: 대부분의 개발자들이 다음과 같은 dagger convention을 Constructor Injection이라고 하는데, 이는 사실 틀린 말이다. 
+
+수정 전의 방법, 즉 모듈에 서비스를 명시적으로 provide해주는 방법에서도 constructor injection을 사용하기 때문이다. 
+
+
+
 ### Dagger Conventions (7)
 
 - Dagger can automatically discover services having a public constructor annotated with `@inject` annotation
 - Automatically discovered services can be scoped
+
+
+
+
+
