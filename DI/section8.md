@@ -36,13 +36,13 @@ class ActivityModule(
         val activity: AppCompatActivity
 ) {
 
-  	// Non-static한 property(activity)를 static method 내에 넣을 수 없기 때문에 
-  	// 해당 method는 companion object로 옮길 수 없음
+	// Non-static한 property(activity)를 static method 내에 넣을 수 없기 때문에 
+	// 해당 method는 companion object로 옮길 수 없음
     @Provides
     fun activity() = activity
 	
     companion object {
-    		@Provides
+	@Provides
         @ActivityScope
         fun screensNavigator(activity: AppCompatActivity) = ScreensNavigator(activity)
 
@@ -124,9 +124,9 @@ object ActivityModule {
 ```kotlin
 @Module
 object ActivityModule {
-		@Provides
-		@ActivityScope
-		fun screensNavigator(activity: AppCompatActivity): ScreensNavigator = ScreensNavigatorImpl(activity)
+	@Provides
+	@ActivityScope
+	fun screensNavigator(activity: AppCompatActivity): ScreensNavigator = ScreensNavigatorImpl(activity)
 }
 ```
 
@@ -143,7 +143,7 @@ Dagger가 interface와 specific implementation을 어떻게 연결지을지 알�
 ```kotlin
 @Module
 abstract class ActivityModule {
-		@Binds
+	@Binds
   	abstract class screensNavigator(screensNavigatorImpl: ScreensNavigatorImpl): ScreensNavigator
 }
 ```
@@ -189,30 +189,30 @@ Ex) Qualifier로 `@Retrofit1`을 만들고, retrofit provider에 `@Retrofit1` an
 ```kotlin
 @Module
 abstract class AppModule(val application: Application) {
-		@Provides
-		@AppScope
-		@Retrofit1
-		fun retrofit1(): Retrofit {
-				Return Retrofit.Builder()
-								.baseUrl(Constants.BASE_URL)
-								.addConverterFactory(GsonConverterFactory.create())
-								.build()
-		}
+	@Provides
+	@AppScope
+	@Retrofit1
+	fun retrofit1(): Retrofit {
+		Return Retrofit.Builder()
+			.baseUrl(Constants.BASE_URL)
+			.addConverterFactory(GsonConverterFactory.create())
+			.build()
+	}
 }
 ```
 
 ```kotlin
 @Module
 abstract class AppModule(val application: Application) {
-		@Provides
-		@AppScope
-		@Named("Retrofit1") // 으로도 사용할 수 있음 (추천 x)
-		fun retrofit1(): Retrofit {
-				Return Retrofit.Builder()
-								.baseUrl(Constants.BASE_URL)
-								.addConverterFactory(GsonConverterFactory.create())
-								.build()
-		}
+	@Provides
+	@AppScope
+	@Named("Retrofit1") // 으로도 사용할 수 있음 (추천 x)
+	fun retrofit1(): Retrofit {
+		Return Retrofit.Builder()
+			.baseUrl(Constants.BASE_URL)
+			.addConverterFactory(GsonConverterFactory.create())
+			.build()
+	}
 }
 ```
 
@@ -230,17 +230,17 @@ abstract class AppModule(val application: Application) {
 
 ```kotlin
 class ViewMvcFactory @Inject constructor(
-		private val layoutInflater: LayoutInflater,
-    private val imageLoaderProvider: Provider<ImageLoader>
+	private val layoutInflater: LayoutInflater,
+    	private val imageLoaderProvider: Provider<ImageLoader>
 ) {
 		
-		fun newQuestionDetailsViewMvc(parent: ViewGroup?): QuestionDetailsViewMvc {
-				val imageLoader1 = imageLoaderProvider.get()
-        val imageLoader2 = imageLoaderProvider.get()
-				val imageLoader3 = imageLoaderProvider.get()
+	fun newQuestionDetailsViewMvc(parent: ViewGroup?): QuestionDetailsViewMvc {
+		val imageLoader1 = imageLoaderProvider.get()
+        	val imageLoader2 = imageLoaderProvider.get()
+		val imageLoader3 = imageLoaderProvider.get()
 
-				return QuestionsDetailViewMvc(layoutInflater, imageLoaderProvider.get(), parent)
-		}
+		return QuestionsDetailViewMvc(layoutInflater, imageLoaderProvider.get(), parent)
+	}
 }
 ```
 
