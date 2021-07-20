@@ -170,3 +170,29 @@ class ViewModelFactory @Inject constructor(
 
 - Use `@JvmSuppressWildcards` at injection site to make it work in Kotlin
 
+
+
+## ViewModel with SavedState
+
+```kotlin
+class MyViewModel @Inject constructor(
+		private val fetchQuestionsUseCase: FetchQuestionsUseCase,
+		private val fetchQuestionDetailsUseCase: FetchQuestionDetailsUseCase,
+		private val savedStateHandle: SavedStateHandle //-> runtime parameter
+): ViewModel() {
+  	private val _questions: MutableLiveData<List<Question>> = savedStateHandle.getLiveData("questions")
+  	val questions: LiveData<List<Question>> = _questions
+  
+  	init {
+      	viewModelScope.launch {
+          	val result = fetchQuestionsUseCase.fetchLatestQuestions()
+          	if (result is FetchQuestionsUseCase.Result.Success) {
+              	_questions.value = result.questions
+            } else {
+              throw RuntimeException("fetch failed")
+            }
+        }
+    }
+}
+```
+
