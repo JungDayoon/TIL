@@ -77,7 +77,8 @@ Disposable disposable = Flowable
 
 - zip: 여러개의 Observable을 합쳐서 전송하게 된다. 특정 item끼리 합쳐서 두 개의 발행을 합쳐서 내려준다.
 
-    ![Android%20Architecture%20Samples%2041529512b2b445c2a82262f40fd61e9c/_2020-12-02__3.06.41.png](Android%20Architecture%20Samples%2041529512b2b445c2a82262f40fd61e9c/_2020-12-02__3.06.41.png)
+    <img width="586" alt="_2020-12-02__3 06 41" src="https://user-images.githubusercontent.com/45536712/127274323-efd1bd15-2ff1-4af3-b138-47fe6fcf1c64.png">
+
 
 working thread의 handling은 RxJava의 스케줄러의 도움을 받아서 한다. 
 
